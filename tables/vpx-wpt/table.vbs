@@ -691,15 +691,15 @@ SolCallback(21) = "ScoopOut"
 SolCallback(32) = "RRDownPost" 'right ramp post
 
 'Solenoid Controlled Flashers
-SolModCallback(22) = "SolModFlashPWM22" 'left slingshot flasher
-SolModCallback(23) = "SolModFlashPWM23" 'right slingshot flasher
-SolModCallback(25) = "SolModFlashPWM25" 'flash left spinner
-SolModCallback(26) = "SolModFlashPWM26" 'back panel 1 left
-SolModCallback(27) = "SolModFlashPWM27" 'back panel 2
-SolModCallback(28) = "SolModFlashPWM28" 'back panel 3
-SolModCallback(29) = "SolModFlashPWM29" 'back panel 4
-SolModCallback(30) = "SolModFlashPWM30" 'back panel 5 right
-SolModCallback(31) = "SolModFlashPWM31" 'right vuk flash
+SolCallback(22) = "SolModFlashPWM22" 'left slingshot flasher
+SolCallback(23) = "SolModFlashPWM23" 'right slingshot flasher
+SolCallback(25) = "SolModFlashPWM25" 'flash left spinner
+SolCallback(26) = "SolModFlashPWM26" 'back panel 1 left
+SolCallback(27) = "SolModFlashPWM27" 'back panel 2
+SolCallback(28) = "SolModFlashPWM28" 'back panel 3
+SolCallback(29) = "SolModFlashPWM29" 'back panel 4
+SolCallback(30) = "SolModFlashPWM30" 'back panel 5 right
+SolCallback(31) = "SolModFlashPWM31" 'right vuk flash
 
 '*******************************************
 '	ZFLP: Flippers
@@ -1282,7 +1282,7 @@ Sub GI_PWM(nr, aLvl)
 	If Not GIisOn And aLvl > 0.1 Then
 		GIisOn = True
 		Sound_GI_Relay 1, Bumper1b
-		Backpanel.image = "BackwallGIOn"
+	'	Backpanel.image = "BackwallGIOn"
 		BackpanelFilament.image = "BackpanelFilamentGIOn"
 		BackpanelLights.image = "BackpanelLightsGIOn"
 		BackpanelMetal.image = "BackpanelMetalGIOn"
@@ -1299,7 +1299,7 @@ Sub GI_PWM(nr, aLvl)
 		WPTPlastics1.image = "WPTPlastics1GIOn"
 		WPTPlastics2.image = "WPTPlastics2GIOn"
 		WPTPlasticsClear.image = "WPTPlasticsClearGIOn"
-		WPTUpperPF.image = "WPTUpperPFGIOn"
+	'	WPTUpperPF.image = "WPTUpperPFGIOn"
 		If SideBladeMod = 0 Then
 			Pincab_Blades.image = "PinCab_BladesGIOn"
 		End If
@@ -1321,7 +1321,7 @@ Sub GI_PWM(nr, aLvl)
 	Elseif GIisOn And aLvl < 0.1 Then
 		GIisOn = False
 		Sound_GI_Relay 0, Bumper1b
-		Backpanel.image = "BackwallGIOff"
+	'	Backpanel.image = "BackwallGIOff"
 		BackpanelFilament.image = "BackpanelFilamentGIOff"
 		BackpanelLights.image = "BackpanelLightsGIOff"
 		BackpanelMetal.image = "BackpanelMetalGIOff"
@@ -1338,7 +1338,7 @@ Sub GI_PWM(nr, aLvl)
 		WPTPlastics1.image = "WPTPlastics1GIOff"
 		WPTPlastics2.image = "WPTPlastics2GIOff"
 		WPTPlasticsClear.image = "WPTPlasticsClearGIOff"
-		WPTUpperPF.image = "WPTUpperPFGIOff"
+	'	WPTUpperPF.image = "WPTUpperPFGIOff"
 		If SideBladeMod = 0 Then
 			Pincab_Blades.image = "PinCab_BladesGIOff"
 		End If
@@ -4528,28 +4528,13 @@ Sub RotateFlasher(nr, angle)
 	objlit(nr).showframe(angle)
 End Sub
 
-''------ Use this for PWM following domes ---------'
-
 Sub ModFlashFlasher(nr, aValue)
-	' Fast performance mode: Simple ON/OFF toggling (bypasses heavy UpdateMaterial calls)
-	If Not EnablePWMFlashers Then
-		Dim state
-		If aValue > 0.1 Then state = 1 Else state = 0
-		objflasher(nr).visible = state
-		objbloom(nr).visible = state
-		objlit(nr).visible = state
-		objlight(nr).IntensityScale = state * FlasherLightIntensity
-		Exit Sub
-	End If
-
-	' Full PWM mode
-	objflasher(nr).visible = 1 : objbloom(nr).visible = 1 : objlit(nr).visible = 1
-	objflasher(nr).opacity = 1000 *  FlasherFlareIntensity * aValue
-	objbloom(nr).opacity = 100 *  FlasherBloomIntensity * aValue
-	objlight(nr).IntensityScale = 0.5 * FlasherLightIntensity * aValue
-	objbase(nr).BlendDisableLighting =  FlasherOffBrightness + 10 * aValue
-	objlit(nr).BlendDisableLighting = 10 * aValue
-	UpdateMaterial "Flashermaterial" & nr,0,0,0,0,0,0,aValue,RGB(255,255,255),0,0,False,True,0,0,0,0 
+	Dim state
+	If aValue Then state = 1 Else state = 0
+	objflasher(nr).visible = state
+	objbloom(nr).visible = state
+	objlit(nr).visible = state
+	objlight(nr).IntensityScale = state * FlasherLightIntensity
 End Sub
 
 Sub SolModFlashPWM22(level)				'Flasher Solonoid Name
