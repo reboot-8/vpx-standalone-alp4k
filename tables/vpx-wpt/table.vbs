@@ -2873,10 +2873,8 @@ Sub DTHit(switch)
 	i = DTArrayID(switch)
 	
 	PlayTargetSound
-	DTArray(i).animate = DTCheckBrick(ActiveBall,DTArray(i).prim)
-	If DTArray(i).animate = 1 Or DTArray(i).animate = 3 Or DTArray(i).animate = 4 Then
-		DTBallPhysics ActiveBall, DTArray(i).prim.rotz, DTMass
-	End If
+	DTArray(i).animate = 1
+	DTBallPhysics ActiveBall, DTArray(i).prim.rotz, DTMass
 	DoDTAnim
 End Sub
 
