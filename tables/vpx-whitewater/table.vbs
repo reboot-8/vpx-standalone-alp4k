@@ -64,7 +64,7 @@ Dim Scoop_Difficulty
 ' *** synchronize flasher frequency with screen refresh rate (ms) *************************
 ' *** 17 for 60 fps, 20 for 100 fps, 13 for 75 fps ****************************************
 ' *** you can use -1 for a fps locked 60 fps **********************************************
-FlasherTimerInterval = 17
+FlasherTimerInterval = 30
 
 ' *** Show siderails in fullscreen mode: True = show siderails, False = do not show *******
 ForceSiderailsFS = False
@@ -74,6 +74,9 @@ HitTheGlass = True
 
 ' *** Special effect: Play with the global illumination off *******************************
 DisableGI = False
+
+'*** Dynamic Ball Shadows: 1 = On, 0 = Off ************************************************
+DynamicBallShadowsOn = 0
 
 ' **** enables manual ball control with C key (enable/disable control) ********************
 ' **** and B key (speed boost) and arrow keys *********************************************
@@ -97,6 +100,7 @@ Const BallMass = 1				  'Ball mass must be 1
 Const tnob = 3					  'Total number of balls the table can hold
 Const lob = 0					   'Locked balls
 Const cGameName = "ww_lh6"		 'The unique alphanumeric name for this table
+Const VRRoom = 0
 
 Dim tablewidth
 tablewidth = Table1.width
@@ -109,38 +113,38 @@ BIPL = False
 
 'VRRoom Initialize *******************
 
-dim VRRoom, UseVPMDMD
-If RenderingMode = 2 Then VRRoom = 1 Else VRRoom = 0
+'dim VRRoom, UseVPMDMD
+'If RenderingMode = 2 Then VRRoom = 1 Else VRRoom = 0
 
-If VRRoom = 1 Then
-	Dim VR_Obj
-	Table1.PlayfieldReflectionStrength = 10
-	For Each VR_Obj in VRCabinet : VR_Obj.Visible = 1 : Next
-	For Each VR_Obj in VR_Room : VR_Obj.Visible = 1 : Next
-	lockbar.Visible = 0
-	leftrail.Visible = 0
-	rightrail.Visible = 0
-	Primitive111.Visible = 0
-	Primitive112.Visible = 0
-	Primitive114.Visible = 0
-	' Right Side
-	Primitive108.Visible = 0 
-	Rock5_bigfoot_cave1.Visible = 0
-	Primitive24.Visible = 0
-	Primitive110.Visible = 0
-	Primitive106.Visible = 0
-	Primitive109.Visible = 0
-	' Left Side
-	Primitive5temp10.Visible = 0
-	Primitive10.Visible = 0
-	Primitive9.Visible = 0
-	UseVPMDMD = true
-	SetBackGlass
-Else
-	For Each VR_Obj in VRCabinet : VR_Obj.Visible = 0 : Next
-	For Each VR_Obj in VR_Room : VR_Obj.Visible = 0 : Next
-	If Table1.ShowDT Then UseVPMDMD = true
-End If
+'If VRRoom = 1 Then
+'	Dim VR_Obj
+'	Table1.PlayfieldReflectionStrength = 10
+'	For Each VR_Obj in VRCabinet : VR_Obj.Visible = 1 : Next
+'	For Each VR_Obj in VR_Room : VR_Obj.Visible = 1 : Next
+'	lockbar.Visible = 0
+'	leftrail.Visible = 0
+'	rightrail.Visible = 0
+'	Primitive111.Visible = 0
+'	Primitive112.Visible = 0
+'	Primitive114.Visible = 0
+'	' Right Side
+'	Primitive108.Visible = 0 
+'	Rock5_bigfoot_cave1.Visible = 0
+'	Primitive24.Visible = 0
+'	Primitive110.Visible = 0
+'	Primitive106.Visible = 0
+'	Primitive109.Visible = 0
+'	' Left Side
+'	Primitive5temp10.Visible = 0
+'	Primitive10.Visible = 0
+'	Primitive9.Visible = 0
+'	UseVPMDMD = true
+'	SetBackGlass
+'Else
+'	For Each VR_Obj in VRCabinet : VR_Obj.Visible = 0 : Next
+'	For Each VR_Obj in VR_Room : VR_Obj.Visible = 0 : Next
+'	If Table1.ShowDT Then UseVPMDMD = true
+'End If
 
 ' *** (not working anymore) disable side wall reflections *********************************
 NoSideWallRelfections = True
@@ -811,10 +815,14 @@ Function STCheckHit(aBall, target) 'Check if target is hit on it's face
 End Function
 
 Sub DoSTAnim()
-	Dim i
+	Dim i, anyAnimating
+	anyAnimating = False
 	For i = 0 To UBound(STArray)
 		STArray(i).animate = STAnimate(STArray(i).primary,STArray(i).prim,STArray(i).sw,STArray(i).animate)
+		If STArray(i).animate > 0 Then anyAnimating = True
 	Next
+
+	If Not anyAnimating Then Exit Sub
 
 	sw31pp.transz = -sw31p.transy
 	sw31pt.transz = -sw31p.transy
@@ -1236,24 +1244,24 @@ Sub ImageLights_Timer()
 		idx = obj.DepthBias - 71
 		If whirlpoollight(idx) > 0 Then
 			If whirlpoollight(idx) = 8 Then 
-				obj.image = "simplelight7" : obj.blenddisablelighting = 2'1
+				obj.blenddisablelighting = 2
 			Else 
-				whirlpoollight(idx) = whirlpoollight(idx) - 1 : obj.image = "simplelight" & whirlpoollight(idx) : obj.blenddisablelighting = whirlpoollight(idx) / 4 - 0.2'/ 7 + 0.3
+				whirlpoollight(idx) = whirlpoollight(idx) - 1 : obj.blenddisablelighting = whirlpoollight(idx) / 4 - 0.2
 			End If
 		End If
 	Next
 	If upf_red_light > 0 Then
 		If upf_red_light = 8 Then 
-			Primitive100.image = "simplelight7" : Primitive100.blenddisablelighting = 1
+			Primitive100.blenddisablelighting = 1
 		Else 
-			upf_red_light = upf_red_light - 1 : Primitive100.image = "simplelight" & upf_red_light : Primitive100.blenddisablelighting = upf_red_light / 7 + 0.3
+			upf_red_light = upf_red_light - 1 : Primitive100.blenddisablelighting = upf_red_light / 7 + 0.3
 		End If
 	End If
 	If upf_yellow_light > 0 Then
 		If upf_yellow_light = 8 Then 
-			Primitive99.image = "simplelightyellow7" : Primitive99.blenddisablelighting = 2
+			Primitive99.blenddisablelighting = 2
 		Else 
-			upf_yellow_light = upf_yellow_light - 1 : Primitive99.image = "simplelightyellow" & upf_yellow_light : Primitive99.blenddisablelighting = upf_yellow_light/ 20
+			upf_yellow_light = upf_yellow_light - 1 : Primitive99.blenddisablelighting = upf_yellow_light / 20
 		End If
 	End If
 End Sub
@@ -1311,7 +1319,7 @@ Sub GILowerLight_Animate
 	Primitive39.blenddisablelighting = s/2
 	Primitive40.blenddisablelighting = s/2
 '	Primitive5temp.material = "rampsGI" & step
-	SetMaterialGlossCoatGreyscale "rampsGILower",s*0.5+0.5
+'	SetMaterialGlossCoatGreyscale "rampsGILower",s*0.5+0.5
 	Flasherbase22.BlendDisableLighting =  s
 End Sub
 
@@ -1331,23 +1339,7 @@ Sub GIMiddleLight_Animate
 	Dim s
 	s = GIMiddleLight.GetInPlayIntensity / GIMiddleLight.Intensity
 	Flasher7.opacity = s*8 * 25 : Flasher8.opacity = s*8 * 25 : Flasher9.opacity = s*8 * 10 : Flasher10.opacity = s*8 * 500
-'	Rock2_Boulder_garden.material = "rockGI"  & step
-'	Rock1_Lower_popbumper.material = "rockGI"  & step
-'	Rock3_Rightpopbumper.material = "rockGI"  & step
-	SetMaterialBaseGreyscale "rockGI",s*0.5+0.5
-	If s < 0.01 Then 
-		Rock2_Boulder_garden.image = "Bouldergarden_LPCompleteMap" 
-		Rock1_Lower_popbumper.image = "LowPopRock_LPMap"
-		Rock3_Rightpopbumper.image = "RightPop-LPCompleteMap" 
-		Primitive57.image = "shooterrampdark"
-	else 
-		Rock2_Boulder_garden.image = "bouldergarden1" 
-		Rock1_Lower_popbumper.image = "lowpop1" 
-		Rock3_Rightpopbumper.image = "rightpop1"
-		Primitive57.image = "shooterramp"
-	End If
-'	Primitive5temp7.material = "rampsGI" & step : Primitive5temp2.material = "rampsGI" & step 
-	SetMaterialGlossCoatGreyscale "rampsGIMiddle",s*0.5+0.5
+
 	sw33pt.blenddisablelighting = s*4
 	sw34pt.blenddisablelighting = s*4 : sw35pt.blenddisablelighting = s*4 : sw31pt.blenddisablelighting = s*4
 	sw32pt.blenddisablelighting = s*4
@@ -1372,7 +1364,7 @@ Sub GIUpperLight_Animate
 	If Flashlevel20 < 0.01 Then Flasher5.opacity = s*8 * 300 : Flasher6.opacity = s*8 * 300 : end if
 	Flasher1.opacity = s*8 * 50 : Flasher2.opacity = s*8 * 20
 '	Primitive5temp5.material = "rampsGI" & step : Primitive5temp3.material = "rampsGI" & step : Primitive5temp8.material = "rampsGI" & step 
-	SetMaterialGlossCoatGreyscale "rampsGIUpper",s*0.5+0.5
+'	SetMaterialGlossCoatGreyscale "rampsGIUpper",s*0.5+0.5
 End Sub
 
 Sub SetMaterialBaseGreyscale(name, val)
@@ -1407,6 +1399,15 @@ End Sub
 ' ***           Flasher subs          *****
 ' *****************************************
 
+' Flasher state tracking variables (Prevents GPU driver pipeline stalls)
+Dim last_matdim8, last_matdim9, last_matdim15, last_matdim16
+Dim last_matdim17, last_matdim18, last_matdim19, last_matdim20
+Dim last_matdim21, last_matdim22, last_matdim23, last_matdim24
+
+last_matdim8 = -1  : last_matdim9 = -1  : last_matdim15 = -1 : last_matdim16 = -1
+last_matdim17 = -1 : last_matdim18 = -1 : last_matdim19 = -1 : last_matdim20 = -1
+last_matdim21 = -1 : last_matdim22 = -1 : last_matdim23 = -1 : last_matdim24 = -1
+
 Dim FlashLevel8, Flashlevel9, Flashlevel15, Flashlevel16
 Dim FlashLevel17, FlashLevel18, FlashLevel19, FlashLevel20, FlashLevel21, FlashLevel22, FlashLevel23, FlashLevel24
 FlasherLight18.state = 0 : FlasherLight19.state = 0 : FlasherLight22.state = 0 : FlasherLight17.state = 0 : FlasherLight17b.state = 0
@@ -1419,40 +1420,23 @@ Sub Flasherset17(value) : FlasherClick FlashLevel17, value : If value < 160 Then
 Sub Flasherlight17_Timer()
 	If not Flasherlight17.TimerEnabled Then
 		Flasherlight17.state = 1 : Flasherlight17b.state = 1 : FlasherFlash17.visible = 1
-		If VRRoom = 1 Then
-			VRBGFL17_1.visible = 1: VRBGFL17_2.visible = 1: VRBGFL17_3.visible = 1: VRBGFL17_4.visible = 1: VRBGFL17_5.visible = 1
-		End If
 		Flasherlight17.TimerEnabled = True
 	End If
 	dim flashx3 : flashx3 = FlashLevel17^2
 	Flasherlight17.IntensityScale = 50 * flashx3 : Flasherlight17b.IntensityScale = 10 * flashx3 : FlasherFlash17.opacity = 5000 * flashx3
-	If VRRoom = 1 Then
-		VRBGFL17_1.IntensityScale = 5 * FlashLevel17^2
-		VRBGFL17_2.IntensityScale = 5 * FlashLevel17^2
-		VRBGFL17_3.IntensityScale = 5 * FlashLevel17^2
-		VRBGFL17_4.IntensityScale = 5 * FlashLevel17^2.5
-		VRBGFL17_5.IntensityScale = 5 * FlashLevel17^3
-	End If
 	FlashLevel17 = FlashLevel17 * 0.8 - 0.01
 	If FlashLevel17 < 0 Then
 		FlasherFlash17.visible = 0 : Flasherlight17.state = 0 : Flasherlight17b.state = 0
-		If VRRoom = 1 Then
-			VRBGFL17_1.visible = 0: VRBGFL17_2.visible =0: VRBGFL17_3.visible = 0: VRBGFL17_4.visible = 0: VRBGFL17_5.visible = 0
-		End If
 		Flasherlight17.TimerEnabled = False
 	End If
 End Sub
 
 ' ********* Right Mountain flasher ********
-Sub Flasherset18(value) : FlasherClick FlashLevel18, value : If value < 160 Then value = 160 : End If : If value > Flashlevel18 * 255 Then FlashLevel18 = value / 255 : FlasherFlash18_Timer : End If : End Sub
 Sub FlasherFlash18_Timer()
-	dim flashx3, matdim : flashx3 = FlashLevel18^3
-	If not Flasherflash18.TimerEnabled Then 
+	Dim flashx3, matdim : flashx3 = FlashLevel18^3
+	If Not Flasherflash18.TimerEnabled Then 
 		Flasherflash18.visible = 1 : Flasher18.visible = 1 : Flasher19.visible = 1 : 
 		Flasherlit18.visible = 1 : Rock4_Back_wall2.visible = 1 : FlasherLight18.state = 1
-		If VRRoom = 1 Then
-			VRBGFL18_1.visible = 1: VRBGFL18_2.visible = 1: VRBGFL18_3.visible = 1: VRBGFL18_4.visible = 1: VRBGFL18_5.visible = 1
-		End If
 		Flasherflash18.TimerEnabled = True
 	End If
 	Flasherflash18.opacity = 250 * flashx3^0.8
@@ -1461,21 +1445,20 @@ Sub FlasherFlash18_Timer()
 	Flasherlight18.IntensityScale = 2 * flashx3
 	Flasher19.opacity = 300000 * Flashx3
 	Flasher18.opacity = 100000 * Flashx3
-	matdim = Round(10 * FlashLevel18) : Flasherlit18.material = "domelit" & matdim : Rock4_Back_wall2.material = "domelit" & matdim
-	If VRRoom = 1 Then
-		VRBGFL18_1.IntensityScale = 5 * FlashLevel18^2
-		VRBGFL18_2.IntensityScale = 5 * FlashLevel18^2
-		VRBGFL18_3.IntensityScale = 5 * FlashLevel18^2
-		VRBGFL18_4.IntensityScale = 5 * FlashLevel18^2.5
-		VRBGFL18_5.IntensityScale = 5 * FlashLevel18^3
-	End If
+
+	' State-tracked material swap
+	matdim = Round(10 * FlashLevel18)
+'	If matdim <> last_matdim18 Then
+'		Flasherlit18.material = "domelit" & matdim
+'		Rock4_Back_wall2.material = "domelit" & matdim
+'		last_matdim18 = matdim
+'	End If
+
 	FlashLevel18 = FlashLevel18 * 0.8 - 0.01
 	If FlashLevel18 < 0 Then 
 		Flasherflash18.visible = 0 : Flasher18.visible = 0 : Flasher19.visible = 0
 		Flasherlit18.visible = 0 : Rock4_Back_wall2.visible = 0 : FlasherLight18.state = 0
-		If VRRoom = 1 Then
-			VRBGFL18_1.visible = 0: VRBGFL18_2.visible = 0: VRBGFL18_3.visible = 0: VRBGFL18_4.visible = 0: VRBGFL18_5.visible = 0
-		End If
+		last_matdim18 = -1
 		Flasherflash18.TimerEnabled = False
 	End If
 End Sub
@@ -1492,14 +1475,23 @@ Sub FlasherFlash19_Timer()
 	End If
 	Flasherflash19.opacity = 250 * flashx3^0.8
 	Flasherlit19.BlendDisableLighting = 4 * FlashLevel19^0.5
-	Flasherbase19.BlendDisableLighting =  flashx3
+	Flasherbase19.BlendDisableLighting = flashx3
 	Flasherlight19.IntensityScale = 2 * flashx3
 	Flasher15.opacity = 100000 * Flashx3 : Flasher17.opacity = 40000 * Flashx3
-	matdim = Round(10 * FlashLevel19) : Flasherlit19.material = "domelit" & matdim : Rock4_Back_wall4.material = "domelit" & matdim
+	
+	' State-tracked material swap
+	matdim = Round(10 * FlashLevel19)
+'	If matdim <> last_matdim19 Then
+'		Flasherlit19.material = "domelit" & matdim
+'		Rock4_Back_wall4.material = "domelit" & matdim
+'		last_matdim19 = matdim
+'	End If
+
 	FlashLevel19 = FlashLevel19 * 0.8 - 0.01
 	If FlashLevel19 < 0 Then
 		Flasherflash19.visible = 0 : Flasher15.visible = 0 : Flasher17.visible = 0
 		Flasherlit19.visible = 0 : Rock4_Back_wall4.visible = 0 : FlasherLight19.state = 0
+		last_matdim19 = -1
 		Flasherflash19.TimerEnabled = False
 	End If
 End Sub
@@ -1510,25 +1502,12 @@ Sub Flasherlight20_Timer()
 	dim flashx3 : flashx3 = FlashLevel20^3
 	If not Flasherlight20.TimerEnabled Then
 		Flasherlight20.state = 1
-		If VRRoom = 1 Then
-			VRBGFL20_1.visible = 1: VRBGFL20_2.visible = 1: VRBGFL20_3.visible = 1: VRBGFL20_4.visible = 1: VRBGFL20_5.visible = 1
-		End If
 		Flasherlight20.TimerEnabled = True
 	End If
 	Flasherlight20.IntensityScale = 2* flashx3: Flasher5.opacity = flashx3 * 2000 + GIUp * 300 : Flasher6.opacity = flashx3 * 2000 + GIUp * 300
-	If VRRoom = 1 Then
-		VRBGFL20_1.IntensityScale = 5 * FlashLevel20^2
-		VRBGFL20_2.IntensityScale = 5 * FlashLevel20^2
-		VRBGFL20_3.IntensityScale = 5 * FlashLevel20^2
-		VRBGFL20_4.IntensityScale = 5 * FlashLevel20^2.5
-		VRBGFL20_5.IntensityScale = 5 * FlashLevel20^3
-	End If
 	FlashLevel20 = FlashLevel20 * 0.8 - 0.01
 	If FlashLevel20 < 0 Then
 		Flasherlight20.state = 0
-		If VRRoom = 1 Then
-			VRBGFL20_1.visible = 0: VRBGFL20_2.visible = 0: VRBGFL20_3.visible = 0: VRBGFL20_4.visible = 0: VRBGFL20_5.visible = 0
-		End If
 		Flasherlight20.TimerEnabled = False
 	End If
 End Sub
@@ -1542,23 +1521,41 @@ Sub Flasherlight21_Timer()
 	Flasher16.opacity = 2000 * FlashLevel21
 	FlashLevel21 = FlashLevel21 * 0.8 - 0.01
 	If not Flasherlight21.TimerEnabled Then FlasherFlash21.visible = 1 : Flasher16.visible = 1 : Flasherlight21.state = 1 : Flasherlight21.TimerEnabled = True : End If
-	If FlashLevel21 < 0 Then 				FlasherFlash21.visible = 0 : Flasher16.visible = 0 : Flasherlight21.state = 0 : Flasherlight21.TimerEnabled = False : End If
+	If FlashLevel21 < 0 Then FlasherFlash21.visible = 0 : Flasher16.visible = 0 : Flasherlight21.state = 0 : Flasherlight21.TimerEnabled = False : End If
 End Sub
 
 ' ******* Whirlpool popper flasher *********
 Sub Flasherset22(value) : FlasherClick FlashLevel22, value : If value < 160 Then value = 160 : End If : If value > Flashlevel22 * 255 Then FlashLevel22 = value / 255 : FlasherFlash22_Timer : End If : End Sub 
 Sub FlasherFlash22_Timer()
 	dim flashx3, matdim : flashx3 = FlashLevel22^3
-	Flasherflash22.opacity = 550 * flashx3^0.6 '550
+	Flasherflash22.opacity = 550 * flashx3^0.6
 	Flasherlit22.BlendDisableLighting = 2 * FlashLevel22^0.5
 	Flasherlight22.IntensityScale = flashx3
 	Flasher11.opacity = 70000 * Flashx3
 	Flasher14.opacity = 7000 * Flashx3
 	Flasher20.opacity = 350 * FlashLevel22
-	matdim = Round(10 * FlashLevel22) : Flasherlit22.material = "domelit" & matdim : Rock6_lost_mine_flash.material = "domelit" & matdim
+
+	' State-tracked material swap
+	matdim = Round(10 * FlashLevel22)
+'	If matdim <> last_matdim22 Then
+'		Flasherlit22.material = "domelit" & matdim
+'		Rock6_lost_mine_flash.material = "domelit" & matdim
+'		last_matdim22 = matdim
+'	End If
+
 	FlashLevel22 = FlashLevel22 * 0.85 - 0.01
 	If not Flasherflash22.TimerEnabled Then Flasherflash22.visible = 1 : Flasher11.visible = 1 : Flasher14.visible = 1 : Flasher20.visible = 1 : Flasherlit22.visible = 1 : Rock6_lost_mine_flash.visible = 1 : Flasherlight22.state = 1 : Flasherflash22.TimerEnabled = True : End If
-	If FlashLevel22 < 0 Then Flasherlit22.visible = 0 : Flasherflash22.TimerEnabled = False : Flasherflash22.visible = 0 :	Rock6_lost_mine_flash.visible = 0 : Flasher20.visible = 0 : Flasher11.visible = 0 : Flasher14.visible = 0 : Flasherlight22.state =  0 : End If
+	If FlashLevel22 < 0 Then 
+		Flasherlit22.visible = 0 
+		Flasherflash22.TimerEnabled = False 
+		Flasherflash22.visible = 0 
+		Rock6_lost_mine_flash.visible = 0 
+		Flasher20.visible = 0 
+		Flasher11.visible = 0 
+		Flasher14.visible = 0 
+		Flasherlight22.state = 0 
+		last_matdim22 = -1
+	End If
 End Sub
 
 ' ******* Enter Whirlpool flasher ***********
@@ -1566,7 +1563,7 @@ Sub Flasherset23(value) : FlasherClick FlashLevel23, value : If value < 160 Then
 Sub Flasherlight23_Timer()
 	Flasherlight23.IntensityScale = FlashLevel23^3 : Primitive77.BlendDisableLighting = 2500 * FlashLevel23^3 : FlashLevel23 = FlashLevel23 * 0.8 - 0.01
 	If not Flasherlight23.TimerEnabled Then Flasherlight23.state = 1 : Flasherlight23.TimerEnabled = True : End If
-	If FlashLevel23 < 0 Then 				Flasherlight23.state = 0 : Flasherlight23.TimerEnabled = False : End If
+	If FlashLevel23 < 0 Then Flasherlight23.state = 0 : Flasherlight23.TimerEnabled = False : End If
 End Sub
 
 ' ********** Bigfoot cave flasher ***********
@@ -1575,26 +1572,13 @@ Sub Flasherlight24_Timer()
 	dim flashx3 : flashx3 = FlashLevel24^3^0.8
 	If not Flasherlight24.TimerEnabled Then
 		FlasherFlash24.visible = 1 : Flasherlight24.state = 1
-		If VRRoom = 1 Then
-			VRBGFL24_1.visible = 1: VRBGFL24_2.visible = 1: VRBGFL24_3.visible = 1: VRBGFL24_4.visible = 1: VRBGFL24_5.visible = 1
-		End If
 		Flasherlight24.TimerEnabled = True
 	End If
 	Flasherlight24.IntensityScale = 2 * flashx3
 	FlasherFlash24.opacity = 10000 * flashx3
-	If VRRoom = 1 Then
-		VRBGFL24_1.IntensityScale = 5 * FlashLevel24^2
-		VRBGFL24_2.IntensityScale = 5 * FlashLevel24^2
-		VRBGFL24_3.IntensityScale = 5 * FlashLevel24^2
-		VRBGFL24_4.IntensityScale = 5 * FlashLevel24^2.5
-		VRBGFL24_5.IntensityScale = 5 * FlashLevel24^3
-	End If
 	FlashLevel24 = FlashLevel24 * 0.8 - 0.01
 	If FlashLevel24 < 0 Then
 		FlasherFlash24.visible = 0 : Flasherlight24.state = 0
-		If VRRoom = 1 Then
-			VRBGFL24_1.visible = 0: VRBGFL24_2.visible = 0: VRBGFL24_3.visible = 0: VRBGFL24_4.visible = 0: VRBGFL24_5.visible = 0
-		End If
 		Flasherlight24.TimerEnabled = False
 	End If
 End Sub
@@ -1602,108 +1586,108 @@ End Sub
 ' ********** Backglass Flasher 8 ***********
 Sub Flasherset8(value) : FlasherClick FlashLevel8, value : If value < 160 Then value = 160 : End If : If value > Flashlevel8 * 255 Then FlashLevel8 = value / 255 : VRBGFL8_1_Timer : End If : End Sub 
 Sub VRBGFL8_1_Timer()
-	If VRRoom = 1 Then
-		If not VRBGFL8_1.TimerEnabled Then 
-			VRBGFL8_1.visible = 1: VRBGFL8_2.visible = 1: VRBGFL8_3.visible = 1: VRBGFL8_4.visible = 1: VRBGFL8_5.visible = 1
-			VRBGFL8_6.visible = 1: VRBGFL8_7.visible = 1: VRBGFL8_8.visible = 1: VRBGFL8_9.visible = 1: VRBGFL8_10.visible = 1
-			VRBGFL8_1.TimerEnabled = True
-		End If
-		VRBGFL8_1.IntensityScale = 5 * FlashLevel8^2
-		VRBGFL8_2.IntensityScale = 5 * FlashLevel8^2
-		VRBGFL8_3.IntensityScale = 5 * FlashLevel8^2
-		VRBGFL8_4.IntensityScale = 5 * FlashLevel8^2.5
-		VRBGFL8_5.IntensityScale = 5 * FlashLevel8^3
-		VRBGFL8_6.IntensityScale = 5 * FlashLevel8^2
-		VRBGFL8_7.IntensityScale = 5 * FlashLevel8^2
-		VRBGFL8_8.IntensityScale = 5 * FlashLevel8^2
-		VRBGFL8_9.IntensityScale = 5 * FlashLevel8^2.5
-		VRBGFL8_10.IntensityScale = 5 * FlashLevel8^3
-		FlashLevel8 = FlashLevel8 * 0.8 - 0.01
-		If FlashLevel8 < 0 Then	
-			VRBGFL8_1.visible = 1: VRBGFL8_2.visible = 1: VRBGFL8_3.visible = 1: VRBGFL8_4.visible = 0: VRBGFL8_5.visible = 0
-			VRBGFL8_6.visible = 1: VRBGFL8_7.visible = 1: VRBGFL8_8.visible = 1: VRBGFL8_9.visible = 0: VRBGFL8_10.visible = 0
-			VRBGFL8_1.TimerEnabled = False
-		End If
-	End If
+'	If VRRoom = 1 Then
+'		If not VRBGFL8_1.TimerEnabled Then 
+'			VRBGFL8_1.visible = 1: VRBGFL8_2.visible = 1: VRBGFL8_3.visible = 1: VRBGFL8_4.visible = 1: VRBGFL8_5.visible = 1
+'			VRBGFL8_6.visible = 1: VRBGFL8_7.visible = 1: VRBGFL8_8.visible = 1: VRBGFL8_9.visible = 1: VRBGFL8_10.visible = 1
+'			VRBGFL8_1.TimerEnabled = True
+'		End If
+'		VRBGFL8_1.IntensityScale = 5 * FlashLevel8^2
+'		VRBGFL8_2.IntensityScale = 5 * FlashLevel8^2
+'		VRBGFL8_3.IntensityScale = 5 * FlashLevel8^2
+'		VRBGFL8_4.IntensityScale = 5 * FlashLevel8^2.5
+'		VRBGFL8_5.IntensityScale = 5 * FlashLevel8^3
+'		VRBGFL8_6.IntensityScale = 5 * FlashLevel8^2
+'		VRBGFL8_7.IntensityScale = 5 * FlashLevel8^2
+'		VRBGFL8_8.IntensityScale = 5 * FlashLevel8^2
+'		VRBGFL8_9.IntensityScale = 5 * FlashLevel8^2.5
+'		VRBGFL8_10.IntensityScale = 5 * FlashLevel8^3
+'		FlashLevel8 = FlashLevel8 * 0.8 - 0.01
+'		If FlashLevel8 < 0 Then	
+'			VRBGFL8_1.visible = 1: VRBGFL8_2.visible = 1: VRBGFL8_3.visible = 1: VRBGFL8_4.visible = 0: VRBGFL8_5.visible = 0
+'			VRBGFL8_6.visible = 1: VRBGFL8_7.visible = 1: VRBGFL8_8.visible = 1: VRBGFL8_9.visible = 0: VRBGFL8_10.visible = 0
+'			VRBGFL8_1.TimerEnabled = False
+'		End If
+'	End If
 End Sub
 
 ' ********** Backglass Flasher 9 ***********
 Sub Flasherset9(value) : FlasherClick FlashLevel9, value : If value < 160 Then value = 160 : End If : If value > Flashlevel9 * 255 Then FlashLevel9 = value / 255 : VRBGFL9_1_Timer : End If : End Sub 
 Sub VRBGFL9_1_Timer()
-	If VRRoom = 1 Then
-		If not VRBGFL9_1.TimerEnabled Then
-			VRBGFL9_1.visible = 1: VRBGFL9_2.visible = 1: VRBGFL9_3.visible = 1: VRBGFL9_4.visible = 1: VRBGFL9_5.visible = 1
-			VRBGFL9_1.TimerEnabled = True
-		End If
-		VRBGFL9_1.IntensityScale = 5 * Flashlevel9^2
-		VRBGFL9_2.IntensityScale = 5 * Flashlevel9^2
-		VRBGFL9_3.IntensityScale = 5 * Flashlevel9^2
-		VRBGFL9_4.IntensityScale = 5 * Flashlevel9^2.5
-		VRBGFL9_5.IntensityScale = 5 * Flashlevel9^3
-		FlashLevel9 = FlashLevel9 * 0.8 - 0.01
-
-		If FlashLevel9 < 0 Then 
-			VRBGFL9_1.visible = 0: VRBGFL9_2.visible = 0: VRBGFL9_3.visible = 0: VRBGFL9_4.visible = 0: VRBGFL9_5.visible = 0
-			VRBGFL9_1.TimerEnabled = False
-		End If
-	End If
+'	If VRRoom = 1 Then
+'		If not VRBGFL9_1.TimerEnabled Then
+'			VRBGFL9_1.visible = 1: VRBGFL9_2.visible = 1: VRBGFL9_3.visible = 1: VRBGFL9_4.visible = 1: VRBGFL9_5.visible = 1
+'			VRBGFL9_1.TimerEnabled = True
+'		End If
+'		VRBGFL9_1.IntensityScale = 5 * Flashlevel9^2
+'		VRBGFL9_2.IntensityScale = 5 * Flashlevel9^2
+'		VRBGFL9_3.IntensityScale = 5 * Flashlevel9^2
+'		VRBGFL9_4.IntensityScale = 5 * Flashlevel9^2.5
+'		VRBGFL9_5.IntensityScale = 5 * Flashlevel9^3
+'		FlashLevel9 = FlashLevel9 * 0.8 - 0.01
+'
+'		If FlashLevel9 < 0 Then 
+'			VRBGFL9_1.visible = 0: VRBGFL9_2.visible = 0: VRBGFL9_3.visible = 0: VRBGFL9_4.visible = 0: VRBGFL9_5.visible = 0
+'			VRBGFL9_1.TimerEnabled = False
+'		End If
+'	End If
 End Sub
 
 ' ********** Backglass Flasher 15 ***********
 Sub Flasherset15(value) : FlasherClick FlashLevel15, value : If value < 160 Then value = 160 : End If : If value > Flashlevel15 * 255 Then FlashLevel15 = value / 255 : VRBGFL15_1_Timer : End If : End Sub 
 Sub VRBGFL15_1_Timer()
-	If VRRoom = 1 Then
-		If not VRBGFL15_1.TimerEnabled Then 
-			VRBGFL15_1.visible = 1: VRBGFL15_2.visible = 1: VRBGFL15_3.visible = 1: VRBGFL15_4.visible = 1: VRBGFL15_5.visible = 1
-			VRBGFL15_6.visible = 1: VRBGFL15_7.visible = 1: VRBGFL15_8.visible = 1: VRBGFL15_9.visible = 1: VRBGFL15_10.visible = 1
-			VRBGFL15_1.TimerEnabled = True
-		End If
-		VRBGFL15_1.IntensityScale = 5 * Flashlevel15^2
-		VRBGFL15_2.IntensityScale = 5 * Flashlevel15^2
-		VRBGFL15_3.IntensityScale = 5 * Flashlevel15^2
-		VRBGFL15_4.IntensityScale = 5 * Flashlevel15^2.5
-		VRBGFL15_5.IntensityScale = 5 * Flashlevel15^3
-		VRBGFL15_6.IntensityScale = 5 * Flashlevel15^2
-		VRBGFL15_7.IntensityScale = 5 * Flashlevel15^2
-		VRBGFL15_8.IntensityScale = 5 * Flashlevel15^2
-		VRBGFL15_9.IntensityScale = 5 * Flashlevel15^2.5
-		VRBGFL15_10.IntensityScale = 5 * Flashlevel15^3
-		FlashLevel15 = FlashLevel15 * 0.8 - 0.01
-		If FlashLevel15 < 0 Then 
-			VRBGFL15_1.visible = 0: VRBGFL15_2.visible = 0: VRBGFL15_3.visible = 0: VRBGFL15_4.visible = 0: VRBGFL15_5.visible = 0
-			VRBGFL15_6.visible = 0: VRBGFL15_7.visible = 0: VRBGFL15_8.visible = 0: VRBGFL15_9.visible = 0: VRBGFL15_10.visible = 0
-			VRBGFL15_1.TimerEnabled = False
-		End If
-	End If
+'	If VRRoom = 1 Then
+'		If not VRBGFL15_1.TimerEnabled Then 
+'			VRBGFL15_1.visible = 1: VRBGFL15_2.visible = 1: VRBGFL15_3.visible = 1: VRBGFL15_4.visible = 1: VRBGFL15_5.visible = 1
+'			VRBGFL15_6.visible = 1: VRBGFL15_7.visible = 1: VRBGFL15_8.visible = 1: VRBGFL15_9.visible = 1: VRBGFL15_10.visible = 1
+'			VRBGFL15_1.TimerEnabled = True
+'		End If
+'		VRBGFL15_1.IntensityScale = 5 * Flashlevel15^2
+'		VRBGFL15_2.IntensityScale = 5 * Flashlevel15^2
+'		VRBGFL15_3.IntensityScale = 5 * Flashlevel15^2
+'		VRBGFL15_4.IntensityScale = 5 * Flashlevel15^2.5
+'		VRBGFL15_5.IntensityScale = 5 * Flashlevel15^3
+'		VRBGFL15_6.IntensityScale = 5 * Flashlevel15^2
+'		VRBGFL15_7.IntensityScale = 5 * Flashlevel15^2
+'		VRBGFL15_8.IntensityScale = 5 * Flashlevel15^2
+'		VRBGFL15_9.IntensityScale = 5 * Flashlevel15^2.5
+'		VRBGFL15_10.IntensityScale = 5 * Flashlevel15^3
+'		FlashLevel15 = FlashLevel15 * 0.8 - 0.01
+'		If FlashLevel15 < 0 Then 
+'			VRBGFL15_1.visible = 0: VRBGFL15_2.visible = 0: VRBGFL15_3.visible = 0: VRBGFL15_4.visible = 0: VRBGFL15_5.visible = 0
+'			VRBGFL15_6.visible = 0: VRBGFL15_7.visible = 0: VRBGFL15_8.visible = 0: VRBGFL15_9.visible = 0: VRBGFL15_10.visible = 0
+'			VRBGFL15_1.TimerEnabled = False
+'		End If
+'	End If
 End Sub
 
 ' ********** Backglass Flasher 16 ***********
 Sub Flasherset16(value) : FlasherClick FlashLevel16, value : If value < 160 Then value = 160 : End If : If value > Flashlevel16 * 255 Then FlashLevel16 = value / 255 : VRBGFL16_1_Timer : End If : End Sub 
 Sub VRBGFL16_1_Timer()
-	If VRRoom = 1 Then
-		If not VRBGFL16_1.TimerEnabled Then 
-			VRBGFL16_1.visible = 1: VRBGFL16_2.visible = 1: VRBGFL16_3.visible = 1: VRBGFL16_4.visible = 1: VRBGFL16_5.visible = 1
-			VRBGFL16_6.visible = 1: VRBGFL16_7.visible = 1: VRBGFL16_8.visible = 1: VRBGFL16_9.visible = 1: VRBGFL16_10.visible = 1
-			VRBGFL16_1.TimerEnabled = True
-		End If
-		VRBGFL16_1.IntensityScale = 5 * FlashLevel16^2
-		VRBGFL16_2.IntensityScale = 5 * FlashLevel16^2
-		VRBGFL16_3.IntensityScale = 5 * FlashLevel16^2
-		VRBGFL16_4.IntensityScale = 5 * FlashLevel16^2.5
-		VRBGFL16_5.IntensityScale = 5 * FlashLevel16^3
-		VRBGFL16_6.IntensityScale = 5 * FlashLevel16^2
-		VRBGFL16_7.IntensityScale = 5 * FlashLevel16^2
-		VRBGFL16_8.IntensityScale = 5 * FlashLevel16^2
-		VRBGFL16_9.IntensityScale = 5 * FlashLevel16^2.5
-		VRBGFL16_10.IntensityScale = 5 * FlashLevel16^3
-		FlashLevel16 = FlashLevel16 * 0.8 - 0.01
+'	If VRRoom = 1 Then
+'		If not VRBGFL16_1.TimerEnabled Then 
+'			VRBGFL16_1.visible = 1: VRBGFL16_2.visible = 1: VRBGFL16_3.visible = 1: VRBGFL16_4.visible = 1: VRBGFL16_5.visible = 1
+'			VRBGFL16_6.visible = 1: VRBGFL16_7.visible = 1: VRBGFL16_8.visible = 1: VRBGFL16_9.visible = 1: VRBGFL16_10.visible = 1
+'			VRBGFL16_1.TimerEnabled = True
+'		End If
+'		VRBGFL16_1.IntensityScale = 5 * FlashLevel16^2
+'		VRBGFL16_2.IntensityScale = 5 * FlashLevel16^2
+'		VRBGFL16_3.IntensityScale = 5 * FlashLevel16^2
+'		VRBGFL16_4.IntensityScale = 5 * FlashLevel16^2.5
+'		VRBGFL16_5.IntensityScale = 5 * FlashLevel16^3
+'		VRBGFL16_6.IntensityScale = 5 * FlashLevel16^2
+'		VRBGFL16_7.IntensityScale = 5 * FlashLevel16^2
+'		VRBGFL16_8.IntensityScale = 5 * FlashLevel16^2
+'		VRBGFL16_9.IntensityScale = 5 * FlashLevel16^2.5
+'		VRBGFL16_10.IntensityScale = 5 * FlashLevel16^3
+'		FlashLevel16 = FlashLevel16 * 0.8 - 0.01
 
-		If FlashLevel16 < 0 Then 
-			VRBGFL16_1.visible = 0: VRBGFL16_2.visible = 0: VRBGFL16_3.visible = 0: VRBGFL16_4.visible = 0: VRBGFL16_5.visible = 0
-			VRBGFL16_6.visible = 0: VRBGFL16_7.visible = 0: VRBGFL16_8.visible = 0: VRBGFL16_9.visible = 0: VRBGFL16_10.visible = 0
-			VRBGFL16_1.TimerEnabled = False
-		End If
-	End If
+'		If FlashLevel16 < 0 Then 
+'			VRBGFL16_1.visible = 0: VRBGFL16_2.visible = 0: VRBGFL16_3.visible = 0: VRBGFL16_4.visible = 0: VRBGFL16_5.visible = 0
+'			VRBGFL16_6.visible = 0: VRBGFL16_7.visible = 0: VRBGFL16_8.visible = 0: VRBGFL16_9.visible = 0: VRBGFL16_10.visible = 0
+'			VRBGFL16_1.TimerEnabled = False
+'		End If
+'	End If
 End Sub
 
 Sub GI4_23_Init()
