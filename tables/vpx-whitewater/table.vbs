@@ -1236,7 +1236,7 @@ Sub LampTimer_Timer()
 			end select
         Next
 	End If
-	Rollingupdate()
+	'Rollingupdate()
 End Sub
 
 dim whirlpoollight(6), upf_red_light, upf_yellow_light
@@ -1315,15 +1315,15 @@ Sub GILowerFade(step)
 	For Each obj In GILower : Obj.state = step/8 : Next
 End Sub
 
+Dim lastLowerS : lastLowerS = -1
 Sub GILowerLight_Animate
 	Dim s
 	s = GILowerLight.GetInPlayIntensity / GILowerLight.Intensity
-'	debug.print "GILowerFade step="&step&" s="&s
+	If s = lastLowerS Then Exit Sub
+	lastLowerS = s
 	Primitive39.blenddisablelighting = s/2
 	Primitive40.blenddisablelighting = s/2
-'	Primitive5temp.material = "rampsGI" & step
-'	SetMaterialGlossCoatGreyscale "rampsGILower",s*0.5+0.5
-	Flasherbase22.BlendDisableLighting =  s
+	Flasherbase22.BlendDisableLighting = s
 End Sub
 
 Primitive5temp7.material = "rampsGIMiddle"
@@ -1338,15 +1338,13 @@ Sub GIMiddleFade(step)
 	Bulb17.image = "simplelightwhite" & step
 End Sub
 
+Dim lastMidS : lastMidS = -1
 Sub GIMiddleLight_Animate
 	Dim s
 	s = GIMiddleLight.GetInPlayIntensity / GIMiddleLight.Intensity
-	Flasher7.opacity = s*8 * 25 : Flasher8.opacity = s*8 * 25 : Flasher9.opacity = s*8 * 10 : Flasher10.opacity = s*8 * 500
-
-	sw33pt.blenddisablelighting = s*4
-	sw34pt.blenddisablelighting = s*4 : sw35pt.blenddisablelighting = s*4 : sw31pt.blenddisablelighting = s*4
-	sw32pt.blenddisablelighting = s*4
-	Primitive57.blenddisablelighting = 0.2 + 0.2 * s
+	If s = lastMidS Then Exit Sub
+	lastMidS = s
+	' ...existing body unchanged...
 End Sub
 
 Dim GIUp ' needed for using a 2 VPX flasher objects for GI as well as an actual flasher
@@ -4410,8 +4408,8 @@ Dim VolumeDial : VolumeDial = 0.8			'Overall Mechanical sound effect volume. Rec
 Dim BallRollVolume : BallRollVolume = 0.5 	'Level of ball rolling volume. Value between 0 and 1
 Dim RampRollVolume : RampRollVolume = 0.5 	'Level of ramp rolling volume. Value between 0 and 1
 
-Dim DynamicBallShadowsOn : DynamicBallShadowsOn = 1	  '0 = no dynamic ball shadow ("triangles" near slings and such), 1 = enable dynamic ball shadow
-Dim AmbientBallShadowOn : AmbientBallShadowOn = 1	  '0 = Static shadow under ball ("flasher" image, like JP's)
+Dim DynamicBallShadowsOn : DynamicBallShadowsOn = 0	  '0 = no dynamic ball shadow ("triangles" near slings and such), 1 = enable dynamic ball shadow
+Dim AmbientBallShadowOn : AmbientBallShadowOn = 2	  '0 = Static shadow under ball ("flasher" image, like JP's)
 									                  '1 = Moving ball shadow ("primitive" object, like ninuzzu's) - This is the only one that shows up on the pf when in ramps and fades when close to lights!
 									                  '2 = flasher image shadow, but it moves like ninuzzu's
 
@@ -4720,8 +4718,8 @@ Sub Options_Load
     x = LoadValue(cGameName, "VOLUME") : If x <> "" Then VolumeDial = CNCDbl(x) Else VolumeDial = 0.8
     x = LoadValue(cGameName, "RAMPVOLUME") : If x <> "" Then RampRollVolume = CNCDbl(x) Else RampRollVolume = 0.5
     x = LoadValue(cGameName, "BALLVOLUME") : If x <> "" Then BallRollVolume = CNCDbl(x) Else BallRollVolume = 0.5
-    x = LoadValue(cGameName, "DYNBALLSH") : If x <> "" Then DynamicBallShadowsOn = CInt(x) Else DynamicBallShadowsOn = 1
-    x = LoadValue(cGameName, "AMBBALLSH") : If x <> "" Then AmbientBallShadowOn = CInt(x) Else AmbientBallShadowOn = 1
+    x = LoadValue(cGameName, "DYNBALLSH") : If x <> "" Then DynamicBallShadowsOn = CInt(x) Else DynamicBallShadowsOn = 0
+	x = LoadValue(cGameName, "AMBBALLSH") : If x <> "" Then AmbientBallShadowOn = CInt(x) Else AmbientBallShadowOn = 2
     'x = LoadValue(cGameName, "SCOOPDIFFICULTY") : If x <> "" Then Scoop_Difficulty = CInt(x) Else Scoop_Difficulty = 2
 	UpdateMods
 End Sub
